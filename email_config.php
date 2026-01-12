@@ -4,9 +4,9 @@
 
 define('SMTP_HOST', 'smtp.gmail.com');
 define('SMTP_PORT', 587);
-define('SMTP_USERNAME', 'souhailessekhayry@gmail.com');
-define('SMTP_PASSWORD', 'gqaf qnsv njwf temu');  // App Password ديالك
-define('SMTP_FROM_EMAIL', 'souhailessekhayry@gmail.com');
+define('SMTP_USERNAME', 'Votre email');
+define('SMTP_PASSWORD', 'votre mot de passe');  // App Password ديالك
+define('SMTP_FROM_EMAIL', 'votre email');
 define('SMTP_FROM_NAME', 'QCM Culture Générale');
 
 // Durée de validité du code (en minutes)
