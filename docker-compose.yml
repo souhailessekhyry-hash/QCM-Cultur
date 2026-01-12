@@ -1,0 +1,93 @@
+version: '3.8'
+
+# ================================================================
+# DOCKER COMPOSE - QCM CULTURE GÉNÉRALE
+# Configuration pour développement local et déploiement
+# ================================================================
+
+services:
+  # ================================================================
+  # SERVICE PHP/APACHE - APPLICATION WEB
+  # ================================================================
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qcm_web
+    ports:
+      - "8080:80"
+    volumes:
+      # Monter le code source (pour le développement)
+      - .:/var/www/html
+    environment:
+      # Configuration de la base de données
+      DB_HOST: db
+      DB_NAME: qcm_culture
+      DB_USER: qcm_user
+      DB_PASS: qcm_password_2024
+      
+      # Configuration Email
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USERNAME: souhailessekhayry@gmail.com
+      SMTP_PASSWORD: "gqaf qnsv njwf temu"
+    depends_on:
+      - db
+    networks:
+      - qcm_network
+    restart: unless-stopped
+
+  # ================================================================
+  # SERVICE MYSQL - BASE DE DONNÉES
+  # ================================================================
+  db:
+    image: mysql:8.0
+    container_name: qcm_database
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_2024
+      MYSQL_DATABASE: qcm_culture
+      MYSQL_USER: qcm_user
+      MYSQL_PASSWORD: qcm_password_2024
+    volumes:
+      # Persister les données de la base
+      - db_data:/var/lib/mysql
+      # Importer le schéma initial
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - qcm_network
+    restart: unless-stopped
+
+  # ================================================================
+  # SERVICE PHPMYADMIN (OPTIONNEL - POUR GESTION)
+  # ================================================================
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: qcm_phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: qcm_user
+      PMA_PASSWORD: qcm_password_2024
+      UPLOAD_LIMIT: 100M
+    depends_on:
+      - db
+    networks:
+      - qcm_network
+    restart: unless-stopped
+
+# ================================================================
+# VOLUMES PERSISTANTS
+# ================================================================
+volumes:
+  db_data:
+    driver: local
+
+# ================================================================
+# RÉSEAUX
+# ================================================================
+networks:
+  qcm_network:
+    driver: bridge

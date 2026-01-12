@@ -1,0 +1,113 @@
+# ================================================================
+# DOCKERFILE POUR APPLICATION QCM CULTURE GÉNÉRALE
+# Pour déploiement sur Azure App Service
+# ================================================================
+
+# Utiliser l'image PHP officielle avec Apache
+FROM php:8.2-apache
+
+# Informations du mainteneur
+LABEL maintainer="souhailessekhayry@gmail.com"
+LABEL description="QCM Culture Générale - Application PHP avec MySQL"
+
+# ================================================================
+# INSTALLATION DES DÉPENDANCES SYSTÈME
+# ================================================================
+
+# Mettre à jour les packages et installer les dépendances nécessaires
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    libzip-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# ================================================================
+# INSTALLATION DES EXTENSIONS PHP
+# ================================================================
+
+RUN docker-php-ext-install \
+    pdo \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip
+
+# ================================================================
+# INSTALLATION DE COMPOSER
+# ================================================================
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# ================================================================
+# CONFIGURATION D'APACHE
+# ================================================================
+
+# Activer mod_rewrite pour Apache
+RUN a2enmod rewrite
+
+# Copier la configuration Apache personnalisée
+COPY docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
+
+# ================================================================
+# CONFIGURATION DU RÉPERTOIRE DE TRAVAIL
+# ================================================================
+
+WORKDIR /var/www/html
+
+# Copier tous les fichiers de l'application
+COPY . /var/www/html/
+
+# ================================================================
+# INSTALLATION DE PHPMAILER VIA COMPOSER
+# ================================================================
+
+RUN composer require phpmailer/phpmailer --no-interaction --prefer-dist --optimize-autoloader
+
+# ================================================================
+# CONFIGURATION DES PERMISSIONS
+# ================================================================
+
+# Donner les permissions appropriées
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
+
+# ================================================================
+# CONFIGURATION DES VARIABLES D'ENVIRONNEMENT
+# ================================================================
+
+# Variables d'environnement par défaut (peuvent être overridées)
+ENV DB_HOST=localhost \
+    DB_NAME=qcm_culture \
+    DB_USER=root \
+    DB_PASS="" \
+    SMTP_HOST=smtp.gmail.com \
+    SMTP_PORT=587 \
+    SMTP_USERNAME=souhailessekhayry@gmail.com \
+    SMTP_PASSWORD="gqaf qnsv njwf temu"
+
+# ================================================================
+# EXPOSITION DU PORT
+# ================================================================
+
+EXPOSE 80
+
+# ================================================================
+# HEALTHCHECK
+# ================================================================
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost/ || exit 1
+
+# ================================================================
+# COMMANDE DE DÉMARRAGE
+# ================================================================
+
+CMD ["apache2-foreground"]
